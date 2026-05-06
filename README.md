@@ -27,4 +27,4 @@ A full-stack Java e-commerce web application built with Jakarta Servlets, JSP, a
 7. Open `http://localhost:8080/FashionStore/home`
 
 ## 👤 Author
-**Bhavani** - [](https://github.com/Bhavani-MaliPatil)
+**Bhavani** - [Bhavani-MaliPatil](https://github.com/Bhavani-MaliPatil)
