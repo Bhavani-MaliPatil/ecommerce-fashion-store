@@ -258,8 +258,8 @@ body {
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 2px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }
 
 /* ── PRODUCT CARD ────────────────────────── */
@@ -269,11 +269,14 @@ body {
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  transition: background var(--transition);
-  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+  border-radius: 4px;
 }
 
 .product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
   background: var(--charcoal);
   border-color: var(--border);
   z-index: 1;
@@ -291,7 +294,7 @@ body {
 /* image wrapper */
 .card-img-wrap {
   width: 100%;
-  aspect-ratio: 3/4;
+  height: 280px;
   overflow: hidden;
   background: var(--graphite);
   position: relative;
@@ -301,6 +304,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top;
   display: block;
   transition: transform 0.5s ease;
 }
@@ -322,7 +326,7 @@ body {
 
 /* card body */
 .card-body {
-  padding: 20px 20px 16px;
+  padding: 14px 14px 8px;
 }
 
 .product-category-tag {
@@ -356,9 +360,9 @@ body {
 
 /* hover actions */
 .card-actions {
-  padding: 0 20px 20px;
-  opacity: 0;
-  transform: translateY(6px);
+  padding: 0 14px 14px;
+  opacity: 1;
+  transform: translateY(0);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
@@ -460,6 +464,10 @@ body {
 
 /* ── RESPONSIVE ──────────────────────────── */
 
+@media (max-width: 1100px) {
+  .product-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
 @media (max-width: 900px) {
   .top-nav { padding: 0 20px; }
   .hero-strip { padding: 36px 20px 28px; }
@@ -468,9 +476,9 @@ body {
   .site-footer { padding: 32px 20px; flex-direction: column; align-items: flex-start; }
   .nav-search-form { display: none; }
   .hero-title { font-size: 32px; }
+  .product-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 480px) {
   .product-grid { grid-template-columns: repeat(2, 1fr); gap: 1px; }
-  .card-actions { opacity: 1; transform: none; }
 }

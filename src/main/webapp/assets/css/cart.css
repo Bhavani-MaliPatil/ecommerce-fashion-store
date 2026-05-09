@@ -173,7 +173,7 @@ body {
 .cart-items-wrap {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 12px;
 }
 
 .cart-item {
@@ -183,7 +183,8 @@ body {
   align-items: center;
   background: var(--coal);
   border: 1px solid var(--border);
-  padding: 20px;
+  border-radius: 4px;
+  padding: 24px;
   transition: background var(--transition);
 }
 
@@ -202,6 +203,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top;
   display: block;
 }
 
@@ -276,6 +278,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  width: fit-content;
 }
 
 .qty-btn {

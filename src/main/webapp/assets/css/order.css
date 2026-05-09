@@ -156,9 +156,9 @@ body {
 /* ── MAIN CONTENT ────────────────────────── */
 
 .main-content {
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 48px 80px;
+  padding: 40px 80px 80px;
 }
 
 /* ── ORDER CARD (list) ───────────────────── */
@@ -166,13 +166,14 @@ body {
 .orders-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 12px;
 }
 
 .order-card {
   background: var(--coal);
   border: 1px solid var(--border);
-  padding: 24px 28px;
+  border-radius: 4px;
+  padding: 28px 32px;
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
@@ -214,6 +215,7 @@ body {
 }
 
 .order-status {
+  width: fit-content;
   font-size: 9px;
   letter-spacing: 2px;
   text-transform: uppercase;
