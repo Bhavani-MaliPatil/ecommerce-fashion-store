@@ -6,7 +6,7 @@ A full-stack Java e-commerce web application built using Jakarta Servlets, JSP, 
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** HTML, CSS, JavaScript, JSP, JSTL  
+- **Frontend:** HTML, CSS, JavaScript, JSP 
 - **Backend:** Java, Jakarta Servlets  
 - **Database:** MySQL  
 - **Server:** Apache Tomcat 10.1  
@@ -52,7 +52,7 @@ DBConnection.java
 
 8. Open in browser:
 ```text
-http://localhost:8080/FashionStore/home
+http://localhost:8080/FashionStore/index.jsp
 ```
 
 ---
