@@ -15,6 +15,7 @@
     if ("1".equals(categoryId)) activeLabel = "Men";
     else if ("2".equals(categoryId)) activeLabel = "Women";
     else if (!keyword.isEmpty()) activeLabel = "Search: " + keyword;
+    String sortBy = request.getAttribute("sortBy") != null ? (String) request.getAttribute("sortBy") : "newest";
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,6 +63,27 @@
       <div class="filter-divider"></div>
       <span class="filter-link active">&ldquo;<%= keyword %>&rdquo;&nbsp;<a href="${pageContext.request.contextPath}/products" style="color:var(--muted);font-size:10px;text-decoration:none;">✕</a></span>
     <% } %>
+
+    <!-- Sort dropdown -->
+    <div style="margin-left:auto; display:flex; align-items:center; padding-right:24px;">
+      <form id="sortForm" action="${pageContext.request.contextPath}/products" method="get" style="display:flex;align-items:center;gap:10px;">
+        <% if (!categoryId.isEmpty()) { %>
+          <input type="hidden" name="categoryId" value="<%= categoryId %>">
+        <% } %>
+        <% if (!keyword.isEmpty()) { %>
+          <input type="hidden" name="search" value="<%= keyword %>">
+        <% } %>
+        <label style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:500;">Sort</label>
+        <select name="sort" onchange="document.getElementById('sortForm').submit()"
+                style="background:var(--graphite);border:1px solid var(--border);color:var(--light);font-family:'Barlow',sans-serif;font-size:11px;padding:6px 12px;border-radius:2px;cursor:pointer;outline:none;">
+          <option value="newest"     <%= "newest".equals(sortBy)     ? "selected" : "" %>>Newest</option>
+          <option value="price_asc"  <%= "price_asc".equals(sortBy)  ? "selected" : "" %>>Price: Low to High</option>
+          <option value="price_desc" <%= "price_desc".equals(sortBy) ? "selected" : "" %>>Price: High to Low</option>
+          <option value="name_asc"   <%= "name_asc".equals(sortBy)   ? "selected" : "" %>>Name: A to Z</option>
+          <option value="name_desc"  <%= "name_desc".equals(sortBy)  ? "selected" : "" %>>Name: Z to A</option>
+        </select>
+      </form>
+    </div>
   </div>
   <div class="shop-layout">
     <div class="product-grid">

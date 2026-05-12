@@ -43,22 +43,39 @@ public class OrderServlet extends HttpServlet {
         if (action == null) action = "myOrders";
 
         switch (action) {
-            case "placeOrder":  handlePlaceOrder(request, response, user);  break;
-            case "orderDetail": handleOrderDetail(request, response, user); break;
+            case "placeOrder":  
+                handlePlaceOrder(request, response, user);  
+                break;
+
+            case "orderDetail": 
+                handleOrderDetail(request, response, user); 
+                break;
+
+            case "cancelOrder":  // ✅ ADDED
+                handleCancelOrder(request, response, user); 
+                break;
+
             case "myOrders":
-            default:            handleMyOrders(request, response, user);    break;
+            default:            
+                handleMyOrders(request, response, user);    
+                break;
         }
     }
 
+    // ================= PLACE ORDER =================
     private void handlePlaceOrder(HttpServletRequest request,
-                                   HttpServletResponse response, User user)
+                                 HttpServletResponse response, User user)
             throws IOException {
+
         int cartSize = cartDAO.getCartItemsByUserId(user.getId()).size();
+
         if (cartSize == 0) {
             response.sendRedirect(request.getContextPath() + "/cart");
             return;
         }
+
         boolean success = orderDAO.placeOrder(user.getId());
+
         if (success) {
             response.sendRedirect(request.getContextPath() + "/order?action=myOrders&placed=true");
         } else {
@@ -66,33 +83,50 @@ public class OrderServlet extends HttpServlet {
         }
     }
 
+    // ================= MY ORDERS =================
     private void handleMyOrders(HttpServletRequest request,
-                                 HttpServletResponse response, User user)
+                               HttpServletResponse response, User user)
             throws ServletException, IOException {
+
         List<Order> orders = orderDAO.getOrdersByUserId(user.getId());
         request.setAttribute("orders", orders);
+
         if ("true".equals(request.getParameter("placed"))) {
             request.setAttribute("successMsg", "Your order has been placed successfully!");
         }
-        request.getRequestDispatcher("/WEB-INF/views/orders.jsp").forward(request, response);
+
+        if ("true".equals(request.getParameter("cancelled"))) {
+            request.setAttribute("successMsg", "Order cancelled successfully!");
+        }
+
+        request.getRequestDispatcher("/WEB-INF/views/orders.jsp")
+               .forward(request, response);
     }
 
+    // ================= ORDER DETAIL =================
     private void handleOrderDetail(HttpServletRequest request,
-                                    HttpServletResponse response, User user)
+                                   HttpServletResponse response, User user)
             throws ServletException, IOException {
+
         String orderIdParam = request.getParameter("orderId");
+
         if (orderIdParam == null || orderIdParam.trim().isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/order?action=myOrders");
             return;
         }
+
         try {
             int orderId = Integer.parseInt(orderIdParam.trim());
+
             Order order = orderDAO.getOrderById(orderId);
+
             if (order == null || order.getUserId() != user.getId()) {
                 response.sendRedirect(request.getContextPath() + "/order?action=myOrders");
                 return;
             }
+
             List<OrderItem> orderItems = orderDAO.getOrderItemsByOrderId(orderId);
+
             for (OrderItem item : orderItems) {
                 Product product = productDAO.getProductById(item.getProductId());
                 if (product != null) {
@@ -101,10 +135,43 @@ public class OrderServlet extends HttpServlet {
                     item.setCategoryId(product.getCategoryId());
                 }
             }
-            request.setAttribute("order",      order);
+
+            request.setAttribute("order", order);
             request.setAttribute("orderItems", orderItems);
+
             request.getRequestDispatcher("/WEB-INF/views/order-detail.jsp")
                    .forward(request, response);
+
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/order?action=myOrders");
+        }
+    }
+
+    // ================= CANCEL ORDER =================
+    private void handleCancelOrder(HttpServletRequest request,
+                                   HttpServletResponse response, User user)
+            throws IOException {
+
+        System.out.println("cancelOrder method called!"); // ✅ DEBUG
+
+        String orderIdParam = request.getParameter("orderId");
+
+        if (orderIdParam == null || orderIdParam.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/order?action=myOrders");
+            return;
+        }
+
+        try {
+            int orderId = Integer.parseInt(orderIdParam.trim());
+
+            boolean success = orderDAO.cancelOrder(orderId, user.getId());
+
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/order?action=myOrders&cancelled=true");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/order?action=myOrders&error=cancelFailed");
+            }
+
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/order?action=myOrders");
         }

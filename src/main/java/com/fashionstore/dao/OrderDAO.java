@@ -18,4 +18,7 @@ public interface OrderDAO {
 
     // Get order items for a specific order (Order Details page)
     List<OrderItem> getOrderItemsByOrderId(int orderId);
+
+    // Cancel order (only if status is PLACED)
+    boolean cancelOrder(int orderId, int userId);
 }

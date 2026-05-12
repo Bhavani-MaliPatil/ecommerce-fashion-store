@@ -222,4 +222,29 @@ public class OrderDAOImpl implements OrderDAO {
 
         return items;
     }
+    
+    @Override
+    public boolean cancelOrder(int orderId, int userId) {
+
+        String query = "UPDATE orders SET status = 'CANCELLED' " +
+                       "WHERE id = ? AND user_id = ? AND status = 'PLACED'";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setInt(1, orderId);
+            ps.setInt(2, userId);
+
+            int rows = ps.executeUpdate();
+
+            System.out.println("Rows updated = " + rows); // debug
+
+            return rows > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
 }

@@ -13,28 +13,36 @@ import com.fashionstore.util.DBConnection;
 
 public class ProductDAOImpl implements ProductDAO {
 
+    // ── Resolve sort parameter to safe SQL ORDER BY ──
+    private String resolveOrderBy(String sortBy) {
+        if (sortBy == null) return "id ASC";
+        switch (sortBy) {
+            case "price_asc":  return "price ASC";
+            case "price_desc": return "price DESC";
+            case "name_asc":   return "name ASC";
+            case "name_desc":  return "name DESC";
+            case "newest":     return "id DESC";
+            default:           return "id ASC";
+        }
+    }
+
     @Override
     public List<Product> getAllProducts() {
+        return getAllProductsSorted(null);
+    }
+
+    @Override
+    public List<Product> getAllProductsSorted(String sortBy) {
 
         List<Product> products = new ArrayList<>();
-        String query = "SELECT * FROM products";
+        String query = "SELECT * FROM products ORDER BY " + resolveOrderBy(sortBy);
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-
-                Product product = new Product();
-
-                product.setId(rs.getInt("id"));
-                product.setName(rs.getString("name"));
-                product.setDescription(rs.getString("description"));
-                product.setPrice(rs.getDouble("price"));
-                product.setCategoryId(rs.getInt("category_id"));
-                product.setImageUrl(rs.getString("image_url"));
-
-                products.add(product);
+                products.add(mapProduct(rs));
             }
 
         } catch (Exception e) {
@@ -57,15 +65,7 @@ public class ProductDAOImpl implements ProductDAO {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-
-                product = new Product();
-
-                product.setId(rs.getInt("id"));
-                product.setName(rs.getString("name"));
-                product.setDescription(rs.getString("description"));
-                product.setPrice(rs.getDouble("price"));
-                product.setCategoryId(rs.getInt("category_id"));
-                product.setImageUrl(rs.getString("image_url"));
+                product = mapProduct(rs);
             }
 
         } catch (Exception e) {
@@ -88,17 +88,7 @@ public class ProductDAOImpl implements ProductDAO {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-
-                Product product = new Product();
-
-                product.setId(rs.getInt("id"));
-                product.setName(rs.getString("name"));
-                product.setDescription(rs.getString("description"));
-                product.setPrice(rs.getDouble("price"));
-                product.setCategoryId(rs.getInt("category_id"));
-                product.setImageUrl(rs.getString("image_url"));
-
-                products.add(product);
+                products.add(mapProduct(rs));
             }
 
         } catch (Exception e) {
@@ -112,26 +102,17 @@ public class ProductDAOImpl implements ProductDAO {
     public List<Product> searchProducts(String keyword) {
 
         List<Product> products = new ArrayList<>();
-        String query = "SELECT * FROM products WHERE name LIKE ?";
+        String query = "SELECT * FROM products WHERE name LIKE ? OR description LIKE ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, "%" + keyword + "%");
+            ps.setString(2, "%" + keyword + "%");
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-
-                Product product = new Product();
-
-                product.setId(rs.getInt("id"));
-                product.setName(rs.getString("name"));
-                product.setDescription(rs.getString("description"));
-                product.setPrice(rs.getDouble("price"));
-                product.setCategoryId(rs.getInt("category_id"));
-                product.setImageUrl(rs.getString("image_url"));
-
-                products.add(product);
+                products.add(mapProduct(rs));
             }
 
         } catch (Exception e) {
@@ -142,7 +123,7 @@ public class ProductDAOImpl implements ProductDAO {
     }
 
     @Override
-    public List<Product> filterProducts(Integer categoryId, String keyword) {
+    public List<Product> filterProducts(Integer categoryId, String keyword, String sortBy) {
 
         List<Product> products = new ArrayList<>();
         StringBuilder query = new StringBuilder("SELECT * FROM products WHERE 1=1");
@@ -152,8 +133,10 @@ public class ProductDAOImpl implements ProductDAO {
         }
 
         if (keyword != null && !keyword.isEmpty()) {
-            query.append(" AND name LIKE ?");
+            query.append(" AND (name LIKE ? OR description LIKE ?)");
         }
+
+        query.append(" ORDER BY ").append(resolveOrderBy(sortBy));
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query.toString())) {
@@ -166,22 +149,13 @@ public class ProductDAOImpl implements ProductDAO {
 
             if (keyword != null && !keyword.isEmpty()) {
                 ps.setString(index++, "%" + keyword + "%");
+                ps.setString(index++, "%" + keyword + "%");
             }
 
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-
-                Product product = new Product();
-
-                product.setId(rs.getInt("id"));
-                product.setName(rs.getString("name"));
-                product.setDescription(rs.getString("description"));
-                product.setPrice(rs.getDouble("price"));
-                product.setCategoryId(rs.getInt("category_id"));
-                product.setImageUrl(rs.getString("image_url"));
-
-                products.add(product);
+                products.add(mapProduct(rs));
             }
 
         } catch (Exception e) {
@@ -206,7 +180,6 @@ public class ProductDAOImpl implements ProductDAO {
             while (rs.next()) {
 
                 ProductVariant variant = new ProductVariant();
-
                 variant.setId(rs.getInt("id"));
                 variant.setProductId(rs.getInt("product_id"));
                 variant.setSize(rs.getString("size"));
@@ -220,5 +193,17 @@ public class ProductDAOImpl implements ProductDAO {
         }
 
         return variants;
+    }
+
+    // ── Helper to map ResultSet → Product ──
+    private Product mapProduct(ResultSet rs) throws Exception {
+        Product product = new Product();
+        product.setId(rs.getInt("id"));
+        product.setName(rs.getString("name"));
+        product.setDescription(rs.getString("description"));
+        product.setPrice(rs.getDouble("price"));
+        product.setCategoryId(rs.getInt("category_id"));
+        product.setImageUrl(rs.getString("image_url"));
+        return product;
     }
 }

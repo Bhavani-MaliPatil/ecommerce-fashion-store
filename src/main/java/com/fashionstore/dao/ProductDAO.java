@@ -10,6 +10,9 @@ public interface ProductDAO {
     // Get all products
     List<Product> getAllProducts();
 
+    // Get all products with sorting
+    List<Product> getAllProductsSorted(String sortBy);
+
     // Get product by ID (for product details page)
     Product getProductById(int productId);
 
@@ -19,8 +22,8 @@ public interface ProductDAO {
     // Search products (e.g., "black t-shirt")
     List<Product> searchProducts(String keyword);
 
-    // Combined filter + search
-    List<Product> filterProducts(Integer categoryId, String keyword);
+    // Combined filter + search + sort
+    List<Product> filterProducts(Integer categoryId, String keyword, String sortBy);
 
     // Get variants (sizes) for a product
     List<ProductVariant> getVariantsByProductId(int productId);

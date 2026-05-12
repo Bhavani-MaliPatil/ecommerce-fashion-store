@@ -142,3 +142,59 @@ const Toast = (() => {
   };
 
 })();
+
+
+// ── BACK TO TOP BUTTON ─────────────────────────────────────
+(function() {
+  // Create button
+  const btn = document.createElement('button');
+  btn.innerHTML = '&#8679;';
+  btn.setAttribute('aria-label', 'Back to top');
+  btn.style.cssText = `
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 8888;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #c9a84c;
+    color: #0a0a0a;
+    border: none;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.3s ease, transform 0.3s ease, background 0.2s ease;
+    pointer-events: none;
+  `;
+
+  document.body.appendChild(btn);
+
+  // Show/hide on scroll
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 300) {
+      btn.style.opacity = '1';
+      btn.style.transform = 'translateY(0)';
+      btn.style.pointerEvents = 'auto';
+    } else {
+      btn.style.opacity = '0';
+      btn.style.transform = 'translateY(12px)';
+      btn.style.pointerEvents = 'none';
+    }
+  });
+
+  // Scroll to top on click
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // Hover effect
+  btn.addEventListener('mouseover', () => btn.style.background = '#d4b05a');
+  btn.addEventListener('mouseout',  () => btn.style.background = '#c9a84c');
+})();

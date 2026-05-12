@@ -101,7 +101,7 @@
         <% } %>
         <div class="summary-row total"><span>Total</span><span class="summary-val">&#8377;<%= String.format("%.0f", grandTotal) %></span></div>
         <p class="summary-note">Taxes included. Free delivery above ₹999.</p>
-        <a href="${pageContext.request.contextPath}/order?action=placeOrder" class="btn-checkout">Proceed to Checkout</a>
+        <button type="button" class="btn-checkout" onclick="showConfirmModal()">Proceed to Checkout</button>
         <a href="${pageContext.request.contextPath}/products" class="btn-continue">Continue Shopping</a>
       </div>
 
@@ -127,6 +127,153 @@
   </footer>
 </div>
 
+
+<!-- ── Confirmation Modal ── -->
+<div id="confirmModal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(4px);
+  align-items:center;
+  justify-content:center;
+">
+  <div style="
+    background:#111;
+    border:1px solid #2e2e2e;
+    border-radius:4px;
+    padding:40px;
+    max-width:420px;
+    width:90%;
+    position:relative;
+    box-shadow:0 24px 64px rgba(0,0,0,0.8);
+  ">
+    <!-- Gold accent top bar -->
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#c9a84c;border-radius:4px 4px 0 0;"></div>
+
+    <!-- Icon -->
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="
+        width:56px;height:56px;
+        background:rgba(201,168,76,0.1);
+        border:1px solid #8a6f2e;
+        border-radius:50%;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        font-size:22px;
+      ">&#128722;</div>
+    </div>
+
+    <!-- Title -->
+    <h2 style="
+      font-family:'Playfair Display',serif;
+      font-size:24px;
+      font-weight:700;
+      color:#f5f5f0;
+      text-align:center;
+      margin-bottom:8px;
+      letter-spacing:-0.5px;
+    ">Confirm Your Order</h2>
+
+    <p style="
+      font-size:13px;
+      color:#777;
+      text-align:center;
+      margin-bottom:24px;
+      line-height:1.6;
+    ">You are about to place an order for</p>
+
+    <!-- Amount -->
+    <div style="
+      background:#1a1a1a;
+      border:1px solid #2e2e2e;
+      border-radius:4px;
+      padding:16px 24px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:8px;
+    ">
+      <span style="font-size:12px;letter-spacing:1px;color:#777;text-transform:uppercase;">Total Amount</span>
+      <span style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#c9a84c;" id="modalTotal"></span>
+    </div>
+
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:28px;
+      padding:0 4px;
+    ">
+      <span style="font-size:11px;color:#555;">Delivery to <%= user != null ? user.getAddressLine() != null && !user.getAddressLine().isEmpty() ? user.getAddressLine() : user.getCity() != null ? user.getCity() : "your address" : "your address" %></span>
+      <span style="font-size:11px;color:<%= deliveryCharge == 0 ? "#2ecc71" : "#c9a84c" %>;">
+        Delivery: <%= deliveryCharge == 0 ? "Free" : "₹" + String.format("%.0f", deliveryCharge) %>
+      </span>
+    </div>
+
+    <!-- Buttons -->
+    <div style="display:flex;gap:12px;">
+      <button onclick="hideConfirmModal()" style="
+        flex:1;
+        padding:13px;
+        background:transparent;
+        color:#999;
+        border:1px solid #2e2e2e;
+        border-radius:2px;
+        font-family:'Barlow',sans-serif;
+        font-size:11px;
+        font-weight:500;
+        letter-spacing:2px;
+        text-transform:uppercase;
+        cursor:pointer;
+        transition:border-color 0.2s,color 0.2s;
+      " onmouseover="this.style.borderColor='#c9a84c';this.style.color='#c9a84c'"
+         onmouseout="this.style.borderColor='#2e2e2e';this.style.color='#999'">
+        Cancel
+      </button>
+      <a href="${pageContext.request.contextPath}/order?action=placeOrder" style="
+        flex:1;
+        padding:13px;
+        background:#c9a84c;
+        color:#0a0a0a;
+        border:none;
+        border-radius:2px;
+        font-family:'Barlow',sans-serif;
+        font-size:11px;
+        font-weight:600;
+        letter-spacing:2px;
+        text-transform:uppercase;
+        cursor:pointer;
+        text-align:center;
+        text-decoration:none;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        transition:background 0.2s;
+      " onmouseover="this.style.background='#d4b05a'"
+         onmouseout="this.style.background='#c9a84c'">
+        Confirm Order
+      </a>
+    </div>
+
+    <!-- Close X -->
+    <button onclick="hideConfirmModal()" style="
+      position:absolute;
+      top:16px;right:16px;
+      background:transparent;
+      border:none;
+      color:#555;
+      font-size:18px;
+      cursor:pointer;
+      line-height:1;
+      transition:color 0.2s;
+    " onmouseover="this.style.color='#f5f5f0'"
+       onmouseout="this.style.color='#555'">&#x2715;</button>
+  </div>
+</div>
+
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script>
   function changeQty(itemId, delta) {
@@ -142,6 +289,31 @@
     Toast.info('Quantity updated');
     setTimeout(() => form.submit(), 400);
   }
+
+  function showConfirmModal() {
+    // Get grand total from page
+    const totalEl = document.querySelector('.summary-val');
+    document.getElementById('modalTotal').textContent = totalEl ? totalEl.textContent : '';
+    const modal = document.getElementById('confirmModal');
+    modal.style.display = 'flex';
+    // Prevent background scroll
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  // Close on backdrop click
+  document.getElementById('confirmModal').addEventListener('click', function(e) {
+    if (e.target === this) hideConfirmModal();
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') hideConfirmModal();
+  });
 </script>
 </body>
 </html>
