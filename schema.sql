@@ -1,7 +1,3 @@
--- Create Database
-CREATE DATABASE IF NOT EXISTS fashion_store;
-USE fashion_store;
-
 -- Table: users
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -90,19 +86,19 @@ ON DUPLICATE KEY UPDATE name=VALUES(name);
 
 -- Insert sample products with images matching assets
 INSERT INTO products (id, name, description, price, category_id, image_url) VALUES
-(1, 'Classic Black T-Shirt', 'A premium cotton crewneck t-shirt in classic black. Breathable, comfortable, and perfect for layering.', 599.00, 1, 'assets/images/black_tshirt.jpg'),
-(2, 'Slim Fit Blue Jeans', 'Classic blue denim jeans with a modern slim fit. Made with lightweight stretch denim for all-day comfort.', 1299.00, 1, 'assets/images/blue_jeans.jpg'),
-(3, 'Casual Blue Shirt', 'Button-down blue cotton shirt. Great for both business-casual and weekend styling.', 999.00, 1, 'assets/images/blue_shirt.jpg'),
-(4, 'Green Hoodie', 'Cozy green pullover hoodie made from soft fleece. Features a spacious kangaroo pocket.', 1199.00, 1, 'assets/images/green_hoodie.jpg'),
-(5, 'Grey Hoodie', 'Versatile grey pullover hoodie. Warm, soft, and highly durable for daily wear.', 1199.00, 1, 'assets/images/grey_hoodie.jpg'),
-(6, 'Classic Denim Jacket', 'Timeless blue denim jacket. A rugged, stylish outer layer that gets better with age.', 1899.00, 1, 'assets/images/denim_jacket.jpg'),
-(7, 'White Sneakers', 'Clean, minimalistic white leather sneakers. The ultimate footwear staple that matches any outfit.', 1499.00, 1, 'assets/images/white_sneakers.jpg'),
-(8, 'Basic White T-Shirt', 'An essential white cotton t-shirt. Soft-washed for ultimate comfort and daily durability.', 499.00, 1, 'assets/images/white_tshirt.jpg'),
-(9, 'Elegant Pink Dress', 'A beautiful and elegant pastel pink dress, perfect for garden parties or evening events.', 1799.00, 2, 'assets/images/pink_dress.jpg'),
-(10, 'Vibrant Red Dress', 'A striking and bold red dress featuring an elegant modern cut and flowing silhouette.', 1999.00, 2, 'assets/images/red_dress.jpg'),
-(11, 'Chic Black Skirt', 'A versatile high-waisted black skirt. A chic styling piece that pairs with everything.', 799.00, 2, 'assets/images/black_skirt.jpg'),
-(12, 'Floral Print Top', 'Lightweight summer top featuring a beautiful and delicate floral print.', 699.00, 2, 'assets/images/floral_top.jpg'),
-(13, 'Yellow Casual Top', 'Bright and cheerful yellow top. Soft fabric with a relaxed, modern fit.', 699.00, 2, 'assets/images/yellow_top.jpg')
+(1, 'Classic Black T-Shirt', 'A premium cotton crewneck t-shirt in classic black. Breathable, comfortable, and perfect for layering.', 599.00, 1, '/assets/images/black_tshirt.jpg'),
+(2, 'Slim Fit Blue Jeans', 'Classic blue denim jeans with a modern slim fit. Made with lightweight stretch denim for all-day comfort.', 1299.00, 1, '/assets/images/blue_jeans.jpg'),
+(3, 'Casual Blue Shirt', 'Button-down blue cotton shirt. Great for both business-casual and weekend styling.', 999.00, 1, '/assets/images/blue_shirt.jpg'),
+(4, 'Green Hoodie', 'Cozy green pullover hoodie made from soft fleece. Features a spacious kangaroo pocket.', 1199.00, 1, '/assets/images/green_hoodie.jpg'),
+(5, 'Grey Hoodie', 'Versatile grey pullover hoodie. Warm, soft, and highly durable for daily wear.', 1199.00, 1, '/assets/images/grey_hoodie.jpg'),
+(6, 'Classic Denim Jacket', 'Timeless blue denim jacket. A rugged, stylish outer layer that gets better with age.', 1899.00, 1, '/assets/images/denim_jacket.jpg'),
+(7, 'White Sneakers', 'Clean, minimalistic white leather sneakers. The ultimate footwear staple that matches any outfit.', 1499.00, 1, '/assets/images/white_sneakers.jpg'),
+(8, 'Basic White T-Shirt', 'An essential white cotton t-shirt. Soft-washed for ultimate comfort and daily durability.', 499.00, 1, '/assets/images/white_tshirt.jpg'),
+(9, 'Elegant Pink Dress', 'A beautiful and elegant pastel pink dress, perfect for garden parties or evening events.', 1799.00, 2, '/assets/images/pink_dress.jpg'),
+(10, 'Vibrant Red Dress', 'A striking and bold red dress featuring an elegant modern cut and flowing silhouette.', 1999.00, 2, '/assets/images/red_dress.jpg'),
+(11, 'Chic Black Skirt', 'A versatile high-waisted black skirt. A chic styling piece that pairs with everything.', 799.00, 2, '/assets/images/black_skirt.jpg'),
+(12, 'Floral Print Top', 'Lightweight summer top featuring a beautiful and delicate floral print.', 699.00, 2, '/assets/images/floral_top.jpg'),
+(13, 'Yellow Casual Top', 'Bright and cheerful yellow top. Soft fabric with a relaxed, modern fit.', 699.00, 2, '/assets/images/yellow_top.jpg')
 ON DUPLICATE KEY UPDATE name=VALUES(name), description=VALUES(description), price=VALUES(price), category_id=VALUES(category_id), image_url=VALUES(image_url);
 
 -- Insert product variants (sizes and stock)

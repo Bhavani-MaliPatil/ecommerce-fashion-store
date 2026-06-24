@@ -122,7 +122,7 @@ body {
   background:
     linear-gradient(to right, #0a0a0a 0%, rgba(10,10,10,0.4) 35%, transparent 55%),
     linear-gradient(to top, #0a0a0a 0%, transparent 20%),
-    url('/fashion-store/assets/images/image.png') right top / cover no-repeat;
+    url('/assets/images/image.png') right top / cover no-repeat;
   z-index: 1;
   pointer-events: none;
 }
@@ -280,12 +280,12 @@ body {
 .cat-bg--men {
   background:
     linear-gradient(to top, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.2) 60%),
-    url('/fashion-store/assets/images/men.jpg') center top / cover no-repeat;
+    url('/assets/images/men.jpg') center top / cover no-repeat;
 }
 .cat-bg--women {
   background:
     linear-gradient(to top, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.2) 60%),
-    url('/fashion-store/assets/images/women.jpg') center top / cover no-repeat;
+    url('/assets/images/women.jpg') center top / cover no-repeat;
 }
 /* Gold accent line on hover */
 .cat-panel::after {
