@@ -56,6 +56,14 @@
             required
             autocomplete="current-password"
           >
+          <div style="text-align:right; margin-top:8px;">
+            <a href="${pageContext.request.contextPath}/user?action=forgotPassword"
+               style="font-size:12px; color:var(--muted); text-decoration:none; letter-spacing:0.5px; transition: color 0.2s;"
+               onmouseover="this.style.color='var(--gold)'"
+               onmouseout="this.style.color='var(--muted)'">
+              Forgot password?
+            </a>
+          </div>
         </div>
 
         <button type="submit" class="btn-primary">Sign In</button>

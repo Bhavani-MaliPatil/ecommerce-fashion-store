@@ -18,4 +18,7 @@ public interface UserDAO {
 
     // Check if email already exists (for registration validation)
     boolean isEmailExists(String email);
+
+    // Reset user password by verifying email and pincode
+    boolean resetPassword(String email, String pincode, String newPassword);
 }

@@ -156,4 +156,36 @@ public class UserDAOImpl implements UserDAO {
 
         return false;
     }
+
+    @Override
+    public boolean resetPassword(String email, String pincode, String newPassword) {
+
+        // First verify that the email + pincode combination exists
+        String checkQuery = "SELECT id FROM users WHERE email = ? AND pincode = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement checkPs = conn.prepareStatement(checkQuery)) {
+
+            checkPs.setString(1, email);
+            checkPs.setString(2, pincode);
+            ResultSet rs = checkPs.executeQuery();
+
+            if (!rs.next()) {
+                return false; // Email or pincode is wrong
+            }
+
+            // Now update the password
+            String updateQuery = "UPDATE users SET password = ? WHERE email = ?";
+            try (PreparedStatement updatePs = conn.prepareStatement(updateQuery)) {
+                updatePs.setString(1, newPassword);
+                updatePs.setString(2, email);
+                return updatePs.executeUpdate() > 0;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
 }

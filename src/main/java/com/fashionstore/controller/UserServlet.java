@@ -62,6 +62,11 @@ public class UserServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/user?action=login");
                 break;
 
+            case "forgotPassword":
+                request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp")
+                       .forward(request, response);
+                break;
+
             case "login":
             default:
                 // If already logged in, go to products
@@ -97,6 +102,10 @@ public class UserServlet extends HttpServlet {
 
             case "register":
                 handleRegister(request, response);
+                break;
+
+            case "forgotPassword":
+                handleForgotPassword(request, response);
                 break;
 
             case "updateProfile":
@@ -280,5 +289,46 @@ public class UserServlet extends HttpServlet {
         request.setAttribute("user", updatedUser);
         request.getRequestDispatcher("/WEB-INF/views/profile.jsp")
                .forward(request, response);
+    }
+    // -------------------------------------------------------
+    // Forgot Password logic
+    // -------------------------------------------------------
+    private void handleForgotPassword(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String email       = request.getParameter("email");
+        String pincode     = request.getParameter("pincode");
+        String newPassword = request.getParameter("newPassword");
+
+        if (email == null || email.trim().isEmpty() ||
+            pincode == null || pincode.trim().isEmpty() ||
+            newPassword == null || newPassword.trim().isEmpty()) {
+
+            request.setAttribute("error", "All fields are required.");
+            request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp")
+                   .forward(request, response);
+            return;
+        }
+
+        if (newPassword.trim().length() < 6) {
+            request.setAttribute("error", "Password must be at least 6 characters.");
+            request.setAttribute("emailValue", email);
+            request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp")
+                   .forward(request, response);
+            return;
+        }
+
+        boolean success = userDAO.resetPassword(email.trim(), pincode.trim(), newPassword.trim());
+
+        if (success) {
+            request.setAttribute("success", "Password reset successfully! You can now sign in.");
+            request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp")
+                   .forward(request, response);
+        } else {
+            request.setAttribute("error", "Invalid email or pincode. Please check your details.");
+            request.setAttribute("emailValue", email);
+            request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp")
+                   .forward(request, response);
+        }
     }
 }
