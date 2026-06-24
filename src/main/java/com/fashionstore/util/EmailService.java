@@ -1,71 +1,67 @@
 package com.fashionstore.util;
 
-import jakarta.mail.*;
-import jakarta.mail.internet.*;
-
-import java.util.Properties;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public class EmailService {
 
     // Read from environment variables (set in Railway)
-    private static final String SMTP_EMAIL    = System.getenv("SMTP_EMAIL");
-    private static final String SMTP_PASSWORD = System.getenv("SMTP_PASSWORD");
-
-    private static final String SMTP_HOST = System.getenv("SMTP_HOST") != null ? System.getenv("SMTP_HOST") : "smtp.gmail.com";
-    private static final int    SMTP_PORT = System.getenv("SMTP_PORT") != null ? Integer.parseInt(System.getenv("SMTP_PORT")) : 587;
+    private static final String RESEND_API_KEY = System.getenv("RESEND_API_KEY");
+    private static final String SENDER_EMAIL   = System.getenv("SENDER_EMAIL") != null 
+                                                 ? System.getenv("SENDER_EMAIL") 
+                                                 : "onboarding@resend.dev";
 
     /**
-     * Sends a 6-digit OTP to the given email address.
-     *
-     * @param toEmail   recipient email
-     * @param otp       6-digit OTP string
-     * @return true if email sent successfully, false otherwise
-     */
+      * Sends a 6-digit OTP to the given email address via Resend HTTP API.
+      *
+      * @param toEmail   recipient email
+      * @param otp       6-digit OTP string
+      * @return true if email sent successfully, false otherwise
+      */
     public static boolean sendOtpEmail(String toEmail, String otp) {
 
-        if (SMTP_EMAIL == null || SMTP_PASSWORD == null) {
-            System.err.println("[EmailService] SMTP credentials missing. SMTP_EMAIL=" + (SMTP_EMAIL == null ? "null" : "set") + ", SMTP_PASSWORD=" + (SMTP_PASSWORD == null ? "null" : "set"));
-            System.err.println("[EmailService] Ensure SMTP_EMAIL and SMTP_PASSWORD env vars are configured in Railway.");
+        if (RESEND_API_KEY == null || RESEND_API_KEY.trim().isEmpty()) {
+            System.err.println("[EmailService] RESEND_API_KEY env var is not set!");
+            System.out.println("[EmailService] [DEVELOPMENT FALLBACK] OTP Code is: " + otp);
             return false;
         }
 
-        Properties props = new Properties();
-        props.put("mail.smtp.auth",            "true");
-        props.put("mail.smtp.host",            SMTP_HOST);
-        props.put("mail.smtp.port",            String.valueOf(SMTP_PORT));
-
-        if (SMTP_PORT == 465) {
-            props.put("mail.smtp.socketFactory.port", String.valueOf(SMTP_PORT));
-            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-            props.put("mail.smtp.socketFactory.fallback", "false");
-            props.put("mail.smtp.ssl.enable", "true");
-        } else {
-            props.put("mail.smtp.starttls.enable", "true");
-        }
-
-        Session session = Session.getInstance(props, new Authenticator() {
-            @Override
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(SMTP_EMAIL, SMTP_PASSWORD);
-            }
-        });
-
         try {
-            Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(SMTP_EMAIL, "FashionStore"));
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
-            message.setSubject("Your FashionStore Password Reset OTP");
-
-            // HTML email body
             String htmlBody = buildEmailHtml(otp);
-            message.setContent(htmlBody, "text/html; charset=utf-8");
+            
+            // Construct JSON payload
+            // Resend API expects: { "from": "...", "to": ["..."], "subject": "...", "html": "..." }
+            // We use simple string concatenation to avoid external JSON dependency
+            String jsonPayload = "{"
+                    + "\"from\":\"" + SENDER_EMAIL + "\","
+                    + "\"to\":[\"" + toEmail + "\"],"
+                    + "\"subject\":\"Your FashionStore Password Reset OTP\","
+                    + "\"html\":\"" + htmlBody.replace("\"", "\\\"").replace("\n", "").replace("\r", "") + "\""
+                    + "}";
 
-            Transport.send(message);
-            System.out.println("[EmailService] OTP email sent to: " + toEmail);
-            return true;
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.resend.com/emails"))
+                    .header("Authorization", "Bearer " + RESEND_API_KEY)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200 || response.statusCode() == 201) {
+                System.out.println("[EmailService] OTP email sent successfully via Resend API to: " + toEmail);
+                return true;
+            } else {
+                System.err.println("[EmailService] Resend API returned error status: " + response.statusCode());
+                System.err.println("[EmailService] Response body: " + response.body());
+                return false;
+            }
 
         } catch (Exception e) {
-            System.err.println("[EmailService] Failed to send OTP email: " + e.getMessage());
+            System.err.println("[EmailService] Failed to send OTP email via Resend API: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
