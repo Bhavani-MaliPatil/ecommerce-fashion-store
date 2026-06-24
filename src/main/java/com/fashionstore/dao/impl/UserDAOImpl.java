@@ -165,6 +165,7 @@ public class UserDAOImpl implements UserDAO {
     public boolean generateAndSendOtp(String email) {
 
         if (!isEmailExists(email)) {
+            System.out.println("[OTP] No account found for email: " + email);
             return false;
         }
 
@@ -182,11 +183,16 @@ public class UserDAOImpl implements UserDAO {
             ps.executeUpdate();
 
         } catch (Exception e) {
+            System.out.println("[OTP] DB error while saving OTP for " + email);
             e.printStackTrace();
             return false;
         }
 
-        return EmailService.sendOtpEmail(email, otp);
+        boolean emailSent = EmailService.sendOtpEmail(email, otp);
+        if (!emailSent) {
+            System.out.println("[OTP] Email exists and OTP was saved, but EmailService failed to send to: " + email);
+        }
+        return emailSent;
     }
 
     // -------------------------------------------------------
