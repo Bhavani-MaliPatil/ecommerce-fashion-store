@@ -310,6 +310,14 @@ public class UserServlet extends HttpServlet {
                 return;
             }
 
+            boolean accountExists = userDAO.isEmailExists(email.trim());
+
+            if (!accountExists) {
+                request.setAttribute("error", "No account found with that email address.");
+                request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp").forward(request, response);
+                return;
+            }
+
             boolean sent = userDAO.generateAndSendOtp(email.trim());
 
             if (sent) {
@@ -317,7 +325,8 @@ public class UserServlet extends HttpServlet {
                 request.setAttribute("emailValue", email.trim());
                 request.setAttribute("info", "A 6-digit OTP has been sent to " + email.trim() + ". Check your inbox!");
             } else {
-                request.setAttribute("error", "No account found with that email address.");
+                // Account exists, but the OTP email failed to send (e.g. mail server issue)
+                request.setAttribute("error", "We found your account, but couldn't send the OTP email right now. Please try again shortly.");
             }
 
             request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp").forward(request, response);
