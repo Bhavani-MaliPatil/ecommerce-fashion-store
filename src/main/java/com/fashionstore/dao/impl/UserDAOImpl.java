@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import com.fashionstore.dao.UserDAO;
 import com.fashionstore.model.User;
 import com.fashionstore.util.DBConnection;
@@ -20,7 +22,7 @@ public class UserDAOImpl implements UserDAO {
 
             ps.setString(1, user.getName());
             ps.setString(2, user.getEmail());
-            ps.setString(3, user.getPassword());
+            ps.setString(3, BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())); // ← hashed
             ps.setString(4, user.getAddressLine());
             ps.setString(5, user.getCity());
             ps.setString(6, user.getState());
@@ -39,28 +41,30 @@ public class UserDAOImpl implements UserDAO {
     public User loginUser(String email, String password) {
 
         User user = null;
-        String query = "SELECT * FROM users WHERE email = ? AND password = ?";
+        // Only filter by email — password checked with BCrypt below
+        String query = "SELECT * FROM users WHERE email = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, email);
-            ps.setString(2, password);
-
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
+                String hashedPassword = rs.getString("password");
 
-                user = new User();
-
-                user.setId(rs.getInt("id"));
-                user.setName(rs.getString("name"));
-                user.setEmail(rs.getString("email"));
-                user.setPassword(rs.getString("password"));
-                user.setAddressLine(rs.getString("address_line"));
-                user.setCity(rs.getString("city"));
-                user.setState(rs.getString("state"));
-                user.setPincode(rs.getString("pincode"));
+                // BCrypt compares plain text with stored hash
+                if (BCrypt.checkpw(password, hashedPassword)) {
+                    user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setName(rs.getString("name"));
+                    user.setEmail(rs.getString("email"));
+                    user.setPassword(hashedPassword);
+                    user.setAddressLine(rs.getString("address_line"));
+                    user.setCity(rs.getString("city"));
+                    user.setState(rs.getString("state"));
+                    user.setPincode(rs.getString("pincode"));
+                }
             }
 
         } catch (Exception e) {
@@ -83,9 +87,7 @@ public class UserDAOImpl implements UserDAO {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-
                 user = new User();
-
                 user.setId(rs.getInt("id"));
                 user.setName(rs.getString("name"));
                 user.setEmail(rs.getString("email"));
@@ -113,7 +115,14 @@ public class UserDAOImpl implements UserDAO {
 
             ps.setString(1, user.getName());
             ps.setString(2, user.getEmail());
-            ps.setString(3, user.getPassword());
+
+            // Only hash if not already hashed (starts with $2a$ = BCrypt hash)
+            String pwd = user.getPassword();
+            if (!pwd.startsWith("$2a$")) {
+                pwd = BCrypt.hashpw(pwd, BCrypt.gensalt());
+            }
+            ps.setString(3, pwd);
+
             ps.setString(4, user.getAddressLine());
             ps.setString(5, user.getCity());
             ps.setString(6, user.getState());
@@ -139,8 +148,7 @@ public class UserDAOImpl implements UserDAO {
 
             ps.setString(1, email);
             ResultSet rs = ps.executeQuery();
-
-            return rs.next(); // true if exists
+            return rs.next();
 
         } catch (Exception e) {
             e.printStackTrace();

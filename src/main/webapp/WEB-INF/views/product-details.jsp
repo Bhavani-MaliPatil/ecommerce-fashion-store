@@ -534,22 +534,35 @@
 
     const cartForm =
         document.getElementById('cartForm');
+    sizeRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            const stock = parseInt(radio.dataset.stock);
+            variantInput.value = radio.value;
+            if (stockNote) {
+                if (stock > 10) {
+                    stockNote.textContent = 'In stock';
+                    stockNote.className = 'stock-note in-stock';
+                } else if (stock > 0) {
+                    stockNote.textContent = `Only ${stock} left — order soon`;
+                    stockNote.className = 'stock-note low-stock';
+                    Toast.warning(`Only ${stock} left in stock!`, 'Order soon before it sells out');
+                }
+            }
+            if (addCartBtn) {
+                addCartBtn.disabled = false;
+                addCartBtn.textContent = 'Add to Cart';
+            }
+        });
+    });
 
     if (cartForm) {
-
         cartForm.addEventListener('submit', e => {
-
             if (!variantInput.value) {
-
                 e.preventDefault();
-
+                Toast.error('Please select a size first', 'Choose your size from the options above');
                 if (stockNote) {
-
-                    stockNote.textContent =
-                        "Please select a size first.";
-
-                    stockNote.className =
-                        "stock-note no-stock";
+                    stockNote.textContent = 'Please select a size first.';
+                    stockNote.className = 'stock-note no-stock';
                 }
             }
         });
