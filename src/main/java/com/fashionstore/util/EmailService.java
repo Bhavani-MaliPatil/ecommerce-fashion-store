@@ -11,8 +11,8 @@ public class EmailService {
     private static final String SMTP_EMAIL    = System.getenv("SMTP_EMAIL");
     private static final String SMTP_PASSWORD = System.getenv("SMTP_PASSWORD");
 
-    private static final String SMTP_HOST = "smtp.gmail.com";
-    private static final int    SMTP_PORT = 587;
+    private static final String SMTP_HOST = System.getenv("SMTP_HOST") != null ? System.getenv("SMTP_HOST") : "smtp.gmail.com";
+    private static final int    SMTP_PORT = System.getenv("SMTP_PORT") != null ? Integer.parseInt(System.getenv("SMTP_PORT")) : 587;
 
     /**
      * Sends a 6-digit OTP to the given email address.
@@ -24,7 +24,8 @@ public class EmailService {
     public static boolean sendOtpEmail(String toEmail, String otp) {
 
         if (SMTP_EMAIL == null || SMTP_PASSWORD == null) {
-            System.err.println("[EmailService] SMTP_EMAIL or SMTP_PASSWORD env var is not set!");
+            System.err.println("[EmailService] SMTP credentials missing. SMTP_EMAIL=" + (SMTP_EMAIL == null ? "null" : "set") + ", SMTP_PASSWORD=" + (SMTP_PASSWORD == null ? "null" : "set"));
+            System.err.println("[EmailService] Ensure SMTP_EMAIL and SMTP_PASSWORD env vars are configured in Railway.");
             return false;
         }
 
