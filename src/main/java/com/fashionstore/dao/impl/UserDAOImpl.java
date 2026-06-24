@@ -3,12 +3,16 @@ package com.fashionstore.dao.impl;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.Random;
 
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.fashionstore.dao.UserDAO;
 import com.fashionstore.model.User;
 import com.fashionstore.util.DBConnection;
+import com.fashionstore.util.EmailService;
 
 public class UserDAOImpl implements UserDAO {
 
@@ -22,7 +26,7 @@ public class UserDAOImpl implements UserDAO {
 
             ps.setString(1, user.getName());
             ps.setString(2, user.getEmail());
-            ps.setString(3, BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())); // ← hashed
+            ps.setString(3, BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
             ps.setString(4, user.getAddressLine());
             ps.setString(5, user.getCity());
             ps.setString(6, user.getState());
@@ -41,7 +45,6 @@ public class UserDAOImpl implements UserDAO {
     public User loginUser(String email, String password) {
 
         User user = null;
-        // Only filter by email — password checked with BCrypt below
         String query = "SELECT * FROM users WHERE email = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -53,7 +56,6 @@ public class UserDAOImpl implements UserDAO {
             if (rs.next()) {
                 String hashedPassword = rs.getString("password");
 
-                // BCrypt compares plain text with stored hash
                 if (BCrypt.checkpw(password, hashedPassword)) {
                     user = new User();
                     user.setId(rs.getInt("id"));
@@ -116,7 +118,6 @@ public class UserDAOImpl implements UserDAO {
             ps.setString(1, user.getName());
             ps.setString(2, user.getEmail());
 
-            // Only hash if not already hashed (starts with $2a$ = BCrypt hash)
             String pwd = user.getPassword();
             if (!pwd.startsWith("$2a$")) {
                 pwd = BCrypt.hashpw(pwd, BCrypt.gensalt());
@@ -157,27 +158,64 @@ public class UserDAOImpl implements UserDAO {
         return false;
     }
 
+    // -------------------------------------------------------
+    // Step 1: Generate 6-digit OTP, save to DB, email it
+    // -------------------------------------------------------
     @Override
-    public boolean resetPassword(String email, String pincode, String newPassword) {
+    public boolean generateAndSendOtp(String email) {
 
-        // First verify that the email + pincode combination exists
-        String checkQuery = "SELECT id FROM users WHERE email = ? AND pincode = ?";
+        if (!isEmailExists(email)) {
+            return false;
+        }
+
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        LocalDateTime expiry = LocalDateTime.now().plusMinutes(10);
+
+        String query = "UPDATE users SET otp = ?, otp_expiry = ? WHERE email = ?";
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement checkPs = conn.prepareStatement(checkQuery)) {
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
-            checkPs.setString(1, email);
-            checkPs.setString(2, pincode);
-            ResultSet rs = checkPs.executeQuery();
+            ps.setString(1, otp);
+            ps.setTimestamp(2, Timestamp.valueOf(expiry));
+            ps.setString(3, email);
+            ps.executeUpdate();
 
-            if (!rs.next()) {
-                return false; // Email or pincode is wrong
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
 
-            // Now update the password
-            String updateQuery = "UPDATE users SET password = ? WHERE email = ?";
+        return EmailService.sendOtpEmail(email, otp);
+    }
+
+    // -------------------------------------------------------
+    // Step 2: Verify OTP, reset password if valid
+    // -------------------------------------------------------
+    @Override
+    public boolean resetPasswordWithOtp(String email, String otp, String newPassword) {
+
+        String query = "SELECT otp, otp_expiry FROM users WHERE email = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            if (!rs.next()) return false;
+
+            String savedOtp  = rs.getString("otp");
+            Timestamp expiry = rs.getTimestamp("otp_expiry");
+
+            if (savedOtp == null || expiry == null)                     return false;
+            if (!savedOtp.equals(otp))                                  return false;
+            if (expiry.toLocalDateTime().isBefore(LocalDateTime.now())) return false;
+
+            // OTP valid — update password and clear OTP fields
+            String updateQuery = "UPDATE users SET password = ?, otp = NULL, otp_expiry = NULL WHERE email = ?";
             try (PreparedStatement updatePs = conn.prepareStatement(updateQuery)) {
-                updatePs.setString(1, newPassword);
+                updatePs.setString(1, BCrypt.hashpw(newPassword, BCrypt.gensalt()));
                 updatePs.setString(2, email);
                 return updatePs.executeUpdate() > 0;
             }

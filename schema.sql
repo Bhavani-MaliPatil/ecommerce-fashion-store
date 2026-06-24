@@ -7,8 +7,14 @@ CREATE TABLE IF NOT EXISTS users (
     address_line VARCHAR(255),
     city VARCHAR(255),
     state VARCHAR(255),
-    pincode VARCHAR(20)
+    pincode VARCHAR(20),
+    otp VARCHAR(6),
+    otp_expiry DATETIME
 );
+
+-- Add OTP columns if upgrading an existing database (safe to run multiple times)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS otp VARCHAR(6);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expiry DATETIME;
 
 -- Table: categories
 CREATE TABLE IF NOT EXISTS categories (

@@ -291,44 +291,76 @@ public class UserServlet extends HttpServlet {
                .forward(request, response);
     }
     // -------------------------------------------------------
-    // Forgot Password logic
+    // Forgot Password — two-step OTP flow
     // -------------------------------------------------------
     private void handleForgotPassword(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        String step        = request.getParameter("step");       // "1" or "2"
         String email       = request.getParameter("email");
-        String pincode     = request.getParameter("pincode");
+        String otp         = request.getParameter("otp");
         String newPassword = request.getParameter("newPassword");
 
-        if (email == null || email.trim().isEmpty() ||
-            pincode == null || pincode.trim().isEmpty() ||
-            newPassword == null || newPassword.trim().isEmpty()) {
+        // ── STEP 1: Send OTP ──────────────────────────────────
+        if ("1".equals(step)) {
 
-            request.setAttribute("error", "All fields are required.");
-            request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp")
-                   .forward(request, response);
+            if (email == null || email.trim().isEmpty()) {
+                request.setAttribute("error", "Please enter your email address.");
+                request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp").forward(request, response);
+                return;
+            }
+
+            boolean sent = userDAO.generateAndSendOtp(email.trim());
+
+            if (sent) {
+                request.setAttribute("otpSent", true);
+                request.setAttribute("emailValue", email.trim());
+                request.setAttribute("info", "A 6-digit OTP has been sent to " + email.trim() + ". Check your inbox!");
+            } else {
+                request.setAttribute("error", "No account found with that email address.");
+            }
+
+            request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp").forward(request, response);
             return;
         }
 
-        if (newPassword.trim().length() < 6) {
-            request.setAttribute("error", "Password must be at least 6 characters.");
-            request.setAttribute("emailValue", email);
-            request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp")
-                   .forward(request, response);
+        // ── STEP 2: Verify OTP + Reset Password ───────────────
+        if ("2".equals(step)) {
+
+            if (email == null || email.trim().isEmpty() ||
+                otp == null || otp.trim().isEmpty() ||
+                newPassword == null || newPassword.trim().isEmpty()) {
+
+                request.setAttribute("error", "All fields are required.");
+                request.setAttribute("otpSent", true);
+                request.setAttribute("emailValue", email);
+                request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp").forward(request, response);
+                return;
+            }
+
+            if (newPassword.trim().length() < 6) {
+                request.setAttribute("error", "Password must be at least 6 characters.");
+                request.setAttribute("otpSent", true);
+                request.setAttribute("emailValue", email);
+                request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp").forward(request, response);
+                return;
+            }
+
+            boolean success = userDAO.resetPasswordWithOtp(email.trim(), otp.trim(), newPassword.trim());
+
+            if (success) {
+                request.setAttribute("success", "Password reset successfully! You can now sign in.");
+            } else {
+                request.setAttribute("error", "Invalid or expired OTP. Please try again.");
+                request.setAttribute("otpSent", true);
+                request.setAttribute("emailValue", email);
+            }
+
+            request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp").forward(request, response);
             return;
         }
 
-        boolean success = userDAO.resetPassword(email.trim(), pincode.trim(), newPassword.trim());
-
-        if (success) {
-            request.setAttribute("success", "Password reset successfully! You can now sign in.");
-            request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp")
-                   .forward(request, response);
-        } else {
-            request.setAttribute("error", "Invalid email or pincode. Please check your details.");
-            request.setAttribute("emailValue", email);
-            request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp")
-                   .forward(request, response);
-        }
+        // Default: show the email entry form
+        request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp").forward(request, response);
     }
 }
